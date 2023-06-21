@@ -3,7 +3,9 @@
 
 // setup authentication so only the request with JWT can access the dashboard
 
-const CustomeAPIError = require('../errors/custom-error')
+
+const jwt = require('jsonwebtoken')
+const { BadRequestError }= require('../errors')
 
 const login = async (req, res) => {
     const {username, password} = req.body
@@ -13,7 +15,7 @@ const login = async (req, res) => {
     // check in the controller
 
     if(!username || !password) {
-        throw new CustomeAPIError('Please provide email and password', 400)
+        throw new BadRequestError('Please provide email and password')
     }
 
     // just for demo, normally provided by DB
@@ -27,23 +29,12 @@ const login = async (req, res) => {
 }
 
 const dashboard = async (req,res) => {
-    const authHeader = req.headers.authorization;
-
-    if(!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new CustomeAPIError('No token provided', 401)
-    }
-
-    const token = authHeader.split('')[1]
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(decoded)
-    } catch (error) {
-        throw new CustomeAPIError('Not authorised to access this route', 401)
-    }
-
     const luckyNumber = Math.floor(Math.random()*100);
-    res.status(200).json({msg: `Hello, Elrey Favour`, secret: `Here is your authorized data,
-    your lucky number is ${luckyNumber}`,})
+
+    res.status(200).json({
+        msg: `Hello, ${req.user.username}`,
+        secret: `Here is your authorized data, your lucky number is ${luckyNumber}`,})
+    
 }
 
 module.exports = {
